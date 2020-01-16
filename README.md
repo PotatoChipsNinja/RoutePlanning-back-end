@@ -17,8 +17,7 @@
 | 参数 | 类型 | 说明 |
 | :- | :-: | :-: |
 | status | Boolean | 返回状态，true为成功，false为失败 |
-| count | Integer | 行程规划方案数目 |
-| route | Array | 方案信息列表 |
+| route | Object | 规划方案信息 |
 | &rarr;distance | Integer | 方案总距离，单位：米 |
 | &rarr;duration | Integer | 方案总时间，单位：秒 |
 | &rarr;path | Array | 路径信息列表 |
@@ -53,34 +52,29 @@ wx.request({
 ``` JSON
 {
     "status": true,
-    "count": 3,
-    "route": [
-        "0": {
-            "distance": 40575,
-            "duration": 7654,
-            "path": [
-                "0": {
-                    "from": "北京西站",
-                    "to": "北京大学",
-                    "distance": 15104,
-                    "duration": 2289
-                },
-                "1": {
-                    "from": "北京大学",
-                    "to": "清华大学",
-                    "distance": 3782,
-                    "duration": 881
-                },
-                "2": {
-                    "from": "清华大学",
-                    "to": "北京南站",
-                    "distance": 21689,
-                    "duration": 4484
-                }
-            ]
-        },
-        "1": {...},
-        "2": {...}
-    ]
+    "route": {
+        "distance": 40575,
+        "duration": 7654,
+        "path": [
+            {
+                "from": "北京西站",
+                "to": "北京大学",
+                "distance": 15104,
+                "duration": 2289
+            },
+            {
+                "from": "北京大学",
+                "to": "清华大学",
+                "distance": 3782,
+                "duration": 881
+            },
+            {
+                "from": "清华大学",
+                "to": "北京南站",
+                "distance": 21689,
+                "duration": 4484
+            }
+        ]
+    }
 }
 ```
