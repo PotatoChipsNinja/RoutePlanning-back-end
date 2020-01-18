@@ -11,7 +11,7 @@
 | method | 是 | Integer | 交通方式选择，参数值范围为0-3，分别对应步行、公交、驾车、骑行 |
 | origin | 是 | String | 出发点 |
 | transits | 是 | String | 途经点，以“,”为分隔 |
-| destination | 否 | String | 目的地 |
+| destination | 是 | String | 目的地 |
 
 ## 返回结果参数
 | 参数 | 类型 | 说明 |
