@@ -1,6 +1,6 @@
 # 行程规划后端接口说明
 ## 接口描述
-接口URL：`https://example.com:port/path`
+接口URL：`https://routeplan.ml:3001/path`
 
 请求方式：`GET`
 > 注：微信小程序强制要求https访问
@@ -29,12 +29,12 @@
 ## 服务示例
 直接请求URL：
 ```
-https://example.com:port/path?method=2&origin=北京西站&transits=清华大学,北京大学&destination=北京南站
+https://routeplan.ml:3001/path?method=2&origin=北京西站&transits=清华大学,北京大学&destination=北京南站
 ```
 小程序发送请求：
 ``` JavaScript
 wx.request({
-  url: 'https://example.com:port/path',
+  url: 'https://routeplan.ml:3001/path',
   data: {
     method: 2,
     origin: '北京西站',
