@@ -71,12 +71,14 @@ function writeLog (msg) {
 function getData (method, arrName, arrDistance, arrDuration) {
     // 获取坐标
     arrLoc = []
+    city = ''
     for (const key in arrName) {
-        loc = search(arrName[key])
-        if (loc == false) {
+        res = search(arrName[key])
+        if (res == false) {
             return false
         }
-        arrLoc[key] = loc
+        city = res.city
+        arrLoc[key] = res.loc
     }
 
     // 获取任意两点间距离和时间
@@ -84,8 +86,8 @@ function getData (method, arrName, arrDistance, arrDuration) {
         arrDistance[i] = []
         arrDuration[i] = []
         for (let j = 0; j < arrName.length; j++) {
-            if (i != j) {
-                res = direction(method, arrLoc[i], arrLoc[j])
+            if (arrName[i] != arrName[j]) {
+                res = direction(method, arrLoc[i], arrLoc[j], city)
                 if (res == false) {
                     return false
                 }
@@ -109,13 +111,13 @@ function callAPI (url, params) {
 function search (keywords) {
     res = callAPI('https://restapi.amap.com/v3/place/text', {key: key, keywords: keywords})
     if (res.status && res.count != 0) {
-        return res.pois[0].location
+        return {city: res.pois[0].cityname, loc: res.pois[0].location}
     } else {
         return false
     }
 }
 
-function direction (method, origin, destination) {
+function direction (method, origin, destination, city) {
     query = {key: key, origin: origin, destination: destination}
     switch (method) {
         case '0':
@@ -125,6 +127,7 @@ function direction (method, origin, destination) {
             }
             break
         case '1':
+            query.city = city
             res = callAPI('https://restapi.amap.com/v3/direction/transit/integrated', query)
             if (res.status == 1 && res.count != 0) {
                 return {distance: res.route.distance, duration: res.route.transits[0].duration}
