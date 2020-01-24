@@ -64,8 +64,14 @@ function server (params) {
 }
 
 function writeLog (msg) {
-    msg = '[' + new Date().toLocaleString() + '] ' + msg + '\n\n'
-    fs.appendFileSync('./log', msg)
+    time = new Date()
+    yy = time.getFullYear()
+    mm = ('0' + (time.getMonth() + 1)).slice(-2)
+    dd = ('0' + time.getDate()).slice(-2)
+    fileName = fileName = './logs/' + yy + mm + dd + '.log'
+    msg = '[' + time.toLocaleString() + '] ' + msg + '\n\n'
+    fs.mkdir('./logs', function () {})
+    fs.appendFileSync(fileName, msg)
 }
 
 function getData (method, arrName, arrDistance, arrDuration) {

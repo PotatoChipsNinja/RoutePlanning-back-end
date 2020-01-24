@@ -39,7 +39,16 @@ app.get('/path', function (req, res) {
 })
 
 app.get('/log', function (req, res) {
-    fs.readFile('log', function(err, content) {
+    time = new Date()
+    res.redirect('/log/' + time.getFullYear() + '/' + (time.getMonth()+1) + '/' + time.getDate())
+})
+
+app.get('/log/:yy/:mm/:dd', function (req, res) {
+    yy = req.params.yy
+    mm = ('0' + req.params.mm).slice(-2)
+    dd = ('0' + req.params.dd).slice(-2)
+    fileName = 'logs/' + yy + mm + dd + '.log'
+    fs.readFile(fileName, function(err, content) {
         if (!err) {
             res.send('<pre>' + content + '</pre>')
         }
