@@ -77,14 +77,9 @@ function writeLog (msg) {
 function getData (method, arrName, arrDistance, arrDuration) {
     // 获取坐标
     arrLoc = []
-    city = ''
-    for (const key in arrName) {
-        res = search(arrName[key])
-        if (res == false) {
-            return false
-        }
-        city = res.city
-        arrLoc[key] = res.loc
+    city = getLoc(arrName, arrLoc)
+    if (city == false) {
+        return false
     }
 
     // 获取任意两点间距离和时间
@@ -114,13 +109,30 @@ function callAPI (url, params) {
     return JSON.parse(request(url).data.toString())
 }
 
-function search (keywords) {
-    res = callAPI('https://restapi.amap.com/v3/place/text', {key: key, keywords: keywords})
-    if (res.status && res.count != 0) {
-        return {city: res.pois[0].cityname, loc: res.pois[0].location}
-    } else {
-        return false
+function callAPI_POST (url, params) {
+    options = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        content: JSON.stringify(params)
     }
+    return JSON.parse(request(url, options).data.toString())
+}
+
+function getLoc(arrName, arrLoc) {
+    params = {ops: []}
+    for (let i = 0; i < arrName.length; i++) {
+        params.ops[i] = {url: '/v3/place/text?key=' + key + '&keywords=' + arrName[i]}
+    }
+    res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
+    
+    for (let i = 0; i < arrName.length; i++) {
+        if (res[i].body.status && res[i].body.count != 0) {
+            arrLoc[i] = res[i].body.pois[0].location
+        } else {
+            return false
+        }
+    }
+    return res[0].body.pois[0].cityname
 }
 
 function direction (method, origin, destination, city) {
