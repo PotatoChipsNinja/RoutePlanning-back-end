@@ -86,18 +86,8 @@ function getData (method, arrName, arrDistance, arrDuration) {
     for (let i = 0; i < arrName.length; i++) {
         arrDistance[i] = []
         arrDuration[i] = []
-        for (let j = 0; j < arrName.length; j++) {
-            if (arrName[i] != arrName[j]) {
-                res = direction(method, arrLoc[i], arrLoc[j], city)
-                if (res == false) {
-                    return false
-                }
-                arrDistance[i][j] = parseInt(res.distance)
-                arrDuration[i][j] = parseInt(res.duration)
-            } else {
-                arrDistance[i][j] = 0
-                arrDuration[i][j] = 0
-            }
+        if (!direction(method, arrLoc, i, city, arrDistance[i], arrDuration[i])) {
+            return false
         }
     }
 
@@ -126,7 +116,7 @@ function getLoc(arrName, arrLoc) {
     res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
     
     for (let i = 0; i < arrName.length; i++) {
-        if (res[i].body.status && res[i].body.count != 0) {
+        if (res[i].body.status == 1 && res[i].body.count != 0) {
             arrLoc[i] = res[i].body.pois[0].location
         } else {
             return false
@@ -135,36 +125,87 @@ function getLoc(arrName, arrLoc) {
     return res[0].body.pois[0].cityname
 }
 
-function direction (method, origin, destination, city) {
-    query = {key: key, origin: origin, destination: destination}
+function direction (method, arrLoc, index, city, dist, dura) {
     switch (method) {
         case '0':
-            res = callAPI('https://restapi.amap.com/v3/direction/walking', query)
-            if (res.status == 1 && res.count != 0) {
-                return {distance: res.route.paths[0].distance, duration: res.route.paths[0].duration}
+            params = {ops: []}
+            for (let j = 0; j < arrLoc.length; j++) {
+                params.ops[j] = {url: '/v3/direction/walking?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[j]}
+            }
+            res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
+            for (let j = 0; j < arrName.length; j++) {
+                if (arrLoc[index] != arrLoc[j]) {
+                    if (res[j].body.status == 1 && res[j].body.count != 0) {
+                        dist[j] = parseInt(res[j].body.route.paths[0].distance)
+                        dura[j] = parseInt(res[j].body.route.paths[0].duration)
+                    } else {
+                        return false
+                    }
+                } else {
+                    dist[j] = 0
+                    dura[j] = 0
+                }
             }
             break
         case '1':
-            query.city = city
-            res = callAPI('https://restapi.amap.com/v3/direction/transit/integrated', query)
-            if (res.status == 1 && res.count != 0) {
-                return {distance: res.route.distance, duration: res.route.transits[0].duration}
+            params = {ops: []}
+            for (let j = 0; j < arrLoc.length; j++) {
+                params.ops[j] = {url: '/v3/direction/transit/integrated?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[j] + '&city=' + city}
+            }
+            res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
+            for (let j = 0; j < arrName.length; j++) {
+                if (arrLoc[index] != arrLoc[j]) {
+                    if (res[j].body.status == 1 && res[j].body.count != 0) {
+                        dist[j] = parseInt(res[j].body.route.distance)
+                        dura[j] = parseInt(res[j].body.route.transits[0].duration)
+                    } else {
+                        return false
+                    }
+                } else {
+                    dist[j] = 0
+                    dura[j] = 0
+                }
             }
             break
         case '2':
-            res = callAPI('https://restapi.amap.com/v3/direction/driving', query)
-            if (res.status == 1 && res.count != 0) {
-                return {distance: res.route.paths[0].distance, duration: res.route.paths[0].duration}
+            params = {ops: []}
+            for (let j = 0; j < arrLoc.length; j++) {
+                params.ops[j] = {url: '/v3/direction/driving?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[j]}
+            }
+            res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
+            for (let j = 0; j < arrName.length; j++) {
+                if (arrLoc[index] != arrLoc[j]) {
+                    if (res[j].body.status == 1 && res[j].body.count != 0) {
+                        dist[j] = parseInt(res[j].body.route.paths[0].distance)
+                        dura[j] = parseInt(res[j].body.route.paths[0].duration)
+                    } else {
+                        return false
+                    }
+                } else {
+                    dist[j] = 0
+                    dura[j] = 0
+                }
             }
             break
         case '3':
-            res = callAPI('https://restapi.amap.com/v4/direction/bicycling', query)
-            if (res.errcode == 0 && res.data.paths.length != 0) {
-                return {distance: res.data.paths[0].distance, duration: res.data.paths[0].duration}
+            for (let j = 0; j < arrLoc.length; j++) {
+                if (arrLoc[index] != arrLoc[j]) {
+                    query = {key: key, origin: arrLoc[index], destination: arrLoc[j]}
+                    res = callAPI('https://restapi.amap.com/v4/direction/bicycling', query)
+                    if (res.errcode == 0 && res.data.paths.length != 0) {
+                        dist[j] = parseInt(res.data.paths[0].distance)
+                        dura[j] = parseInt(res.data.paths[0].duration)
+                    } else {
+                        return false
+                    }
+                } else {
+                    dist[j] = 0
+                    dura[j] = 0
+                }
             }
             break
     }
-    return false
+    return true
 }
 
 exports.server = server
