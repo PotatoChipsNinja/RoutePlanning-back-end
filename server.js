@@ -118,6 +118,7 @@ function getLoc(arrName, arrLoc) {
     for (let i = 0; i < arrName.length; i++) {
         if (res[i].body.status == 1 && res[i].body.count != 0) {
             arrLoc[i] = res[i].body.pois[0].location
+            arrName[i] = res[i].body.pois[0].name
         } else {
             return false
         }
