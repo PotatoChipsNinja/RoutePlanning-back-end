@@ -40,7 +40,6 @@ function server (params) {
     offset = params.max_count == undefined ? 10 : params.max_count
 
     res = callAPI_GET('https://restapi.amap.com/v3/place/around', {key: key, location:location, types: types, radius: radius, offset: offset})
-    console.log(res)
     result = new Result()
     if (res.status == 1 && res.count != 0) {
         for (let i = 0; i < res.pois.length; i++) {
