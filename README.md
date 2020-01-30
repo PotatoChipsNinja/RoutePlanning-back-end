@@ -10,26 +10,30 @@
 | :-: | :-: | :-: | :-: |
 | method | 是 | Integer | 交通方式选择，参数值范围为0-3，分别对应步行、公交、驾车、骑行 |
 | origin | 是 | String | 出发点 |
-| transits | 是 | String | 途经点，以“,”为分隔 |
+| transits | 是 | String | 途经点，以“,”分隔 |
 | destination | 是 | String | 目的地 |
 
 ## 返回结果参数
 | 参数 | 类型 | 说明 |
 | :- | :-: | :-: |
 | status | Boolean | 返回状态，true为成功，false为失败 |
+| search | Array | 搜索结果信息 |
+| &rarr;q_name | String | 请求地点名称 |
+| &rarr;s_name | String | 搜索到的地点名称 |
+| &rarr;location | String | 经纬度，以“,”分隔 |
 | route | Object | 规划方案信息 |
 | &rarr;distance | Integer | 方案总距离，单位：米 |
 | &rarr;duration | Integer | 方案总时间，单位：秒 |
 | &rarr;path | Array | 路径信息列表 |
-| &rarr;&rarr;from | string | 此段起点 |
-| &rarr;&rarr;to | string | 此段终点 |
+| &rarr;&rarr;from | String | 此段起点 |
+| &rarr;&rarr;to | String | 此段终点 |
 | &rarr;&rarr;distance | Integer | 此段距离，单位：米 |
 | &rarr;&rarr;duration | Integer | 此段时间，单位：秒 |
 
 ## 服务示例
 直接请求URL：
 ```
-https://routeplan.ml:3001/path?method=2&origin=北京西站&transits=清华大学,北京大学&destination=北京南站
+https://routeplan.ml:3001/path?method=2&origin=北京西&transits=清华,北大&destination=北京南
 ```
 小程序发送请求：
 ``` JavaScript
@@ -37,9 +41,9 @@ wx.request({
   url: 'https://routeplan.ml:3001/path',
   data: {
     method: 2,
-    origin: '北京西站',
-    transits: ['清华大学', '北京大学'],
-    destination: '北京南站'
+    origin: '北京西',
+    transits: '清华,北大',
+    destination: '北京南'
   },
   method: "GET",
   success(res) {
@@ -52,6 +56,28 @@ wx.request({
 ``` JSON
 {
     "status": true,
+    "search": [
+      {
+        "q_name": "北京西",
+        "s_name": "北京西站",
+        "location": "116.322056,39.89491"
+      },
+      {
+        "q_name": "清华",
+        "s_name": "清华大学",
+        "location": "116.326836,40.00366"
+      },
+      {
+        "q_name": "北大",
+        "s_name": "北京大学",
+        "location": "116.310905,39.992806"
+      },
+      {
+        "q_name": "北京南",
+        "s_name": "北京南站",
+        "location": "116.378517,39.865246"
+      }
+    ],
     "route": {
         "distance": 40575,
         "duration": 7654,

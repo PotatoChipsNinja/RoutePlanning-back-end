@@ -8,10 +8,21 @@ const key = '6a9eb8bf6ec83bb67c50ba0540799c76'
 class Result {
     constructor () {
         this.status = false
+        this.search = []
         this.route = {
             distance: -1,
             duration: -1,
             path: []
+        }
+    }
+
+    addSearch (qName, sName, loc) {
+        for (let i = 0; i < qName.length; i++) {
+            this.search.push({
+                q_name: qName[i],
+                s_name: sName[i],
+                location: loc[i]
+            })
         }
     }
 
@@ -42,14 +53,19 @@ function server (params) {
     // 生成地点名称数组
     names = params.origin + ',' + params.transits + ',' + params.destination
     arrName = names.split(',')
+    qName = names.split(',')
 
     result = new Result()   // 保存返回结果
     arrDistance = []        // 保存任意两点间距离
     arrDuration = []        // 保存任意两点间时间
 
     // 尝试请求数据
-    if (getData(params.method, arrName, arrDistance, arrDuration)) {
-        // 数据获取成功，计算不对称TSP问题
+    arrLoc = getData(params.method, arrName, arrDistance, arrDuration)
+    if (arrLoc != false) {
+        // 数据获取成功
+        result.addSearch(qName, arrName, arrLoc)
+
+        // 计算不对称TSP问题
         ans = calc(arrDuration, arrName.length)
         for (let i = 0; i < ans.length-1; i++) {
             result.addPath(arrName[ans[i]], arrName[ans[i+1]], arrDistance[ans[i]][ans[i+1]], arrDuration[ans[i]][ans[i+1]])
@@ -91,7 +107,7 @@ function getData (method, arrName, arrDistance, arrDuration) {
         }
     }
 
-    return true
+    return arrLoc
 }
 
 function callAPI (url, params) {
