@@ -3,8 +3,10 @@ const https = require('https')
 const http = require('http')
 const url = require('url')
 const fs = require('fs')
-const server = require('./server').server
+const getKey = require('./server').getKey
 const writeLog = require('./server').writeLog
+const pathServer = require('./path').server
+const aroundServer = require('./around').server
 
 const app = express()
 const port = 3000       // HTTP端口
@@ -15,17 +17,43 @@ const options = {
     cert: fs.readFileSync('/etc/letsencrypt/live/routeplan.ml/fullchain.pem')
 }
 
+// 从文件读取key
+if (!getKey()) {
+    console.log('Key Not Found')
+    process.exit()
+}
+
 http.createServer(app).listen(port, () => console.log(`HTTP server is listening on port ${port}`))
 https.createServer(options, app).listen(SSLport, () => console.log(`HTTPS server is listening on port ${SSLport}`))
 
 app.get('/path', function (req, res) {
     try {
         reqTime = new Date()
-        console.log('[' + new Date().toLocaleString() + '] A request received.')
-        result = server(url.parse(req.url, true).query)
+        console.log('[' + new Date().toLocaleString() + '] A PATH request received.')
+        result = pathServer(url.parse(req.url, true).query)
         res.send(result)
         resTime = new Date()
-        writeLog('ACTIVE' +
+        writeLog('PATH' +
+            '\nrequestTime = ' + reqTime.toLocaleString() +
+            '\nresponseTime = ' + resTime.toLocaleString() +
+            '\ninterval = ' + (resTime.getTime() - reqTime.getTime()).toString() + 'ms' +
+            '\nquery = ' + JSON.stringify(url.parse(req.url, true).query) +
+            '\nresult = ' + result)
+    } catch (err) {
+        console.log('[' + new Date().toLocaleString() + '] An error occurred.')
+        writeLog('ERROR\n' + err.stack)
+        res.status(500).send('Internal Error')
+    }
+})
+
+app.get('/around', function (req, res) {
+    try {
+        reqTime = new Date()
+        console.log('[' + new Date().toLocaleString() + '] An AROUND request received.')
+        result = aroundServer(url.parse(req.url, true).query)
+        res.send(result)
+        resTime = new Date()
+        writeLog('AROUND' +
             '\nrequestTime = ' + reqTime.toLocaleString() +
             '\nresponseTime = ' + resTime.toLocaleString() +
             '\ninterval = ' + (resTime.getTime() - reqTime.getTime()).toString() + 'ms' +
