@@ -5,7 +5,7 @@ const request = require('urllib-sync').request
 function getKey () {
     key = ''
     try {
-        key = fs.readFileSync('key', ).toString()
+        key = fs.readFileSync('key').toString()
         require('./path').getKey(key)
         require('./around').getKey(key)
     } catch {
