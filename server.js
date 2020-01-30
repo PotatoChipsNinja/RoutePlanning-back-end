@@ -8,7 +8,7 @@ function getKey () {
         key = fs.readFileSync('key').toString()
         require('./path').getKey(key)
         require('./around').getKey(key)
-    } catch {
+    } catch (err) {
         return false
     }
     return !(key == '')
