@@ -12,10 +12,12 @@ const app = express()
 const port = 3000       // HTTP端口
 const SSLport = 3001    // HTTPS端口
 // 证书信息
+/*
 const options = {
     key: fs.readFileSync('/etc/letsencrypt/live/routeplan.ml/privkey.pem'),
     cert: fs.readFileSync('/etc/letsencrypt/live/routeplan.ml/fullchain.pem')
 }
+*/
 
 // 从文件读取key
 if (!getKey()) {
@@ -24,7 +26,7 @@ if (!getKey()) {
 }
 
 http.createServer(app).listen(port, () => console.log(`HTTP server is listening on port ${port}`))
-https.createServer(options, app).listen(SSLport, () => console.log(`HTTPS server is listening on port ${SSLport}`))
+//https.createServer(options, app).listen(SSLport, () => console.log(`HTTPS server is listening on port ${SSLport}`))
 
 app.get('/path', function (req, res) {
     try {
