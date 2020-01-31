@@ -26,6 +26,12 @@ if (!getKey()) {
 http.createServer(app).listen(port, () => console.log(`HTTP server is listening on port ${port}`))
 https.createServer(options, app).listen(SSLport, () => console.log(`HTTPS server is listening on port ${SSLport}`))
 
+// 解决跨域问题
+app.all('*', function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*')
+    next()
+})
+
 app.get('/path', function (req, res) {
     try {
         reqTime = new Date()
