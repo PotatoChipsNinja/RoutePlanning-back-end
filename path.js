@@ -1,6 +1,5 @@
 const callAPI_GET = require('./server').callAPI_GET
 const callAPI_POST = require('./server').callAPI_POST
-const calc = require('./algorithm').calc
 
 var key = ''
 
@@ -55,50 +54,61 @@ function server (params) {
     qName = names.split(',')
 
     result = new Result()   // 保存返回结果
-    arrDistance = []        // 保存任意两点间距离
-    arrDuration = []        // 保存任意两点间时间
 
-    // 尝试请求数据
-    arrLoc = getData(params.method, arrName, arrDistance, arrDuration)
-    if (arrLoc != false) {
-        // 数据获取成功
-        result.addSearch(qName, arrName, arrLoc)
-
-        // 计算不对称TSP问题
-        ans = calc(arrDuration, arrName.length)
-        for (let i = 0; i < ans.length-1; i++) {
-            result.addPath(arrName[ans[i]], arrName[ans[i+1]], arrDistance[ans[i]][ans[i+1]], arrDuration[ans[i]][ans[i+1]])
-        }
-
-        // 核算总距离和时间
-        result.sumUp()
-        result.status = true
+    // 尝试请求坐标
+    arrLoc = []
+    city = getLoc(arrName, arrLoc)  // 若全部坐标获取成功则返回城市名，否则返回false
+    if (city == false) {
+        return result.toString()
     }
 
+    // 求解TSP问题
+    last = 0
+    visited = [true]
+    for (let i = 1; i < arrName.length-1; i++) {
+        visited[i] = false
+    }
+    // 最近邻点法
+    for (let i = 0; i < arrName.length-1; i++) {
+        // 从ans[i]起
+        dist = []
+        dura = []
+        for (let i = 0; i < arrLoc.length; i++) {
+            if (visited[i]) {
+                dist[i] = -1
+                dura[i] = -1
+            }
+        }
+        direction(params.method, arrLoc, last, city, dist, dura)
+
+        if (i == arrName.length-2) {
+            result.addPath(arrName[last], arrName[i+1], dist[i+1], dura[i+1])
+        } else {
+            selected = -1
+            for (let j = 0; j < arrName.length-1; j++) {
+                if (!visited[j] && dist[j] != -1) {
+                    if (selected == -1 || dura[j] < dura[selected]) {
+                        selected = j
+                    }
+                }
+            }
+            if (selected == -1) {
+                result.route.path = []
+                return result.toString()
+            } else {
+                result.addPath(arrName[last], arrName[selected], dist[selected], dura[selected])
+                last = selected
+                visited[selected] = true
+            }
+        }
+    }
+
+    // 计算完成，写进返回信息中
+    result.addSearch(qName, arrName, arrLoc)
+    result.sumUp()
+    result.status = true
     return result.toString()
 }
-
-function getData (method, arrName, arrDistance, arrDuration) {
-    // 获取坐标
-    arrLoc = []
-    city = getLoc(arrName, arrLoc)
-    if (city == false) {
-        return false
-    }
-
-    // 获取任意两点间距离和时间
-    for (let i = 0; i < arrName.length; i++) {
-        arrDistance[i] = []
-        arrDuration[i] = []
-        if (!direction(method, arrLoc, i, city, arrDistance[i], arrDuration[i])) {
-            return false
-        }
-    }
-
-    return arrLoc
-}
-
-
 
 function getLoc(arrName, arrLoc) {
     params = {ops: []}
@@ -121,84 +131,93 @@ function getLoc(arrName, arrLoc) {
 function direction (method, arrLoc, index, city, dist, dura) {
     switch (method) {
         case '0':
+            // TODO: 查询Cache
             params = {ops: []}
-            for (let j = 0; j < arrLoc.length; j++) {
-                params.ops[j] = {url: '/v3/direction/walking?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[j]}
+            ht = []     // 哈希表，记录对应关系
+            for (let i = 0; i < arrLoc.length; i++) {
+                if (dist[i] == null) {
+                    params.ops[ht.length] = {url: '/v3/direction/walking?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[i]}
+                    ht.push(i)
+                }
             }
             res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
-            for (let j = 0; j < arrName.length; j++) {
-                if (arrLoc[index] != arrLoc[j]) {
-                    if (res[j].body.status == 1 && res[j].body.count != 0) {
-                        dist[j] = parseInt(res[j].body.route.paths[0].distance)
-                        dura[j] = parseInt(res[j].body.route.paths[0].duration)
-                    } else {
-                        return false
-                    }
+            for (let i = 0; i < ht.length; i++) {
+                if (res[i].body.status == 1 && res[i].body.count != 0) {
+                    dist[ht[i]] = parseInt(res[i].body.route.paths[0].distance)
+                    dura[ht[i]] = parseInt(res[i].body.route.paths[0].duration)
                 } else {
-                    dist[j] = 0
-                    dura[j] = 0
+                    dist[ht[i]] = -1
+                    dura[ht[i]] = -1
                 }
             }
             break
         case '1':
+            // TODO: 查询Cache
             params = {ops: []}
-            for (let j = 0; j < arrLoc.length; j++) {
-                params.ops[j] = {url: '/v3/direction/transit/integrated?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[j] + '&city=' + city}
+            ht = []     // 哈希表，记录对应关系
+            for (let i = 0; i < arrLoc.length; i++) {
+                if (dist[i] == null) {
+                    params.ops[ht.length] = {url: '/v3/direction/transit/integrated?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[i] + '&city=' + city}
+                    ht.push(i)
+                }
             }
             res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
-            for (let j = 0; j < arrName.length; j++) {
-                if (arrLoc[index] != arrLoc[j]) {
-                    if (res[j].body.status == 1 && res[j].body.count != 0) {
-                        dist[j] = parseInt(res[j].body.route.distance)
-                        dura[j] = parseInt(res[j].body.route.transits[0].duration)
-                    } else {
-                        return false
-                    }
+            for (let i = 0; i < ht.length; i++) {
+                if (res[i].body.status == 1 && res[i].body.count != 0) {
+                    dist[ht[i]] = parseInt(res[i].body.route.distance)
+                    dura[ht[i]] = parseInt(res[i].body.route.transits[0].duration)
                 } else {
-                    dist[j] = 0
-                    dura[j] = 0
+                    // 没有查到公交方案，尝试查询步行方案
+                    query = {key: key, origin: arrLoc[index], destination: arrLoc[ht[i]]}
+                    resWalk = callAPI_GET('https://restapi.amap.com/v3/direction/walking', query)
+                    if (resWalk.status == 1 && resWalk.count != 0) {
+                        dist[ht[i]] = parseInt(resWalk.route.paths[0].distance)
+                        dura[ht[i]] = parseInt(resWalk.route.paths[0].duration)
+                    } else {
+                        dist[ht[i]] = -1
+                        dura[ht[i]] = -1
+                    }
                 }
             }
             break
         case '2':
+            // TODO: 查询Cache
             params = {ops: []}
-            for (let j = 0; j < arrLoc.length; j++) {
-                params.ops[j] = {url: '/v3/direction/driving?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[j]}
+            ht = []     // 哈希表，记录对应关系
+            for (let i = 0; i < arrLoc.length; i++) {
+                if (dist[i] == null) {
+                    params.ops[ht.length] = {url: '/v3/direction/driving?key=' + key + '&origin=' + arrLoc[index] + '&destination=' + arrLoc[i]}
+                    ht.push(i)
+                }
             }
             res = callAPI_POST('https://restapi.amap.com/v3/batch?key=' + key, params)
-            for (let j = 0; j < arrName.length; j++) {
-                if (arrLoc[index] != arrLoc[j]) {
-                    if (res[j].body.status == 1 && res[j].body.count != 0) {
-                        dist[j] = parseInt(res[j].body.route.paths[0].distance)
-                        dura[j] = parseInt(res[j].body.route.paths[0].duration)
-                    } else {
-                        return false
-                    }
+            for (let i = 0; i < ht.length; i++) {
+                if (res[i].body.status == 1 && res[i].body.count != 0) {
+                    dist[ht[i]] = parseInt(res[i].body.route.paths[0].distance)
+                    dura[ht[i]] = parseInt(res[i].body.route.paths[0].duration)
                 } else {
-                    dist[j] = 0
-                    dura[j] = 0
+                    dist[ht[i]] = -1
+                    dura[ht[i]] = -1
                 }
             }
             break
         case '3':
-            for (let j = 0; j < arrLoc.length; j++) {
-                if (arrLoc[index] != arrLoc[j]) {
-                    query = {key: key, origin: arrLoc[index], destination: arrLoc[j]}
+            // TODO: 查询Cache
+            for (let i = 0; i < arrLoc.length; i++) {
+                if (dist[i] == null) {
+                    query = {key: key, origin: arrLoc[index], destination: arrLoc[i]}
                     res = callAPI_GET('https://restapi.amap.com/v4/direction/bicycling', query)
                     if (res.errcode == 0 && res.data.paths.length != 0) {
-                        dist[j] = parseInt(res.data.paths[0].distance)
-                        dura[j] = parseInt(res.data.paths[0].duration)
+                        dist[i] = parseInt(res.data.paths[0].distance)
+                        dura[i] = parseInt(res.data.paths[0].duration)
                     } else {
-                        return false
+                        dist[i] = -1
+                        dura[i] = -1
                     }
-                } else {
-                    dist[j] = 0
-                    dura[j] = 0
                 }
             }
             break
     }
-    return true
 }
 
 function getKey (myKey) {
