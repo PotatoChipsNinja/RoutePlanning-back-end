@@ -2,7 +2,7 @@
 
 ## 一、行程规划接口
 ### 1. 接口描述
-接口URL：`https://routeplan.ml:3001/path`
+接口URL：`https://lab.pcninja.cn/route/path`
 
 请求方式：`GET`
 > 注：微信小程序强制要求https访问
@@ -35,12 +35,12 @@
 ### 4. 服务示例
 直接请求URL：
 ```
-https://routeplan.ml:3001/path?method=2&origin=北京西&transits=清华,北大&destination=北京南
+https://lab.pcninja.cn/route/path?method=2&origin=北京西&transits=清华,北大&destination=北京南
 ```
 小程序发送请求：
 ``` JavaScript
 wx.request({
-  url: 'https://routeplan.ml:3001/path',
+  url: 'https://lab.pcninja.cn/route/path',
   data: {
     method: 2,
     origin: '北京西',
@@ -109,7 +109,7 @@ wx.request({
 
 ## 二、周边查询接口
 ### 1. 接口描述
-接口URL：`https://routeplan.ml:3001/around`
+接口URL：`https://lab.pcninja.cn/route/around`
 
 请求方式：`GET`
 > 注：微信小程序强制要求https访问
@@ -135,12 +135,12 @@ wx.request({
 ### 4. 服务示例
 直接请求URL：
 ```
-https://routeplan.ml:3001/around?location=116.322056,39.89491&type=0&max_count=2
+https://lab.pcninja.cn/route/around?location=116.322056,39.89491&type=0&max_count=2
 ```
 小程序发送请求：
 ``` JavaScript
 wx.request({
-  url: 'https://routeplan.ml:3001/around',
+  url: 'https://lab.pcninja.cn/route/around',
   data: {
     location: '116.322056,39.89491',
     type: 0,
