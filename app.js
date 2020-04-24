@@ -9,13 +9,7 @@ const pathServer = require('./path').server
 const aroundServer = require('./around').server
 
 const app = express()
-const port = 3000       // HTTP端口
-const SSLport = 3001    // HTTPS端口
-// 证书信息
-const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/routeplan.ml/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/routeplan.ml/fullchain.pem')
-}
+const port = 3000
 
 // 从文件读取key
 if (!getKey()) {
@@ -23,8 +17,7 @@ if (!getKey()) {
     process.exit()
 }
 
-http.createServer(app).listen(port, () => console.log(`HTTP server is listening on port ${port}`))
-https.createServer(options, app).listen(SSLport, () => console.log(`HTTPS server is listening on port ${SSLport}`))
+app.listen(port, () => console.log(`HTTP server is listening on port ${port}`))
 
 // 解决跨域问题
 app.all('*', function (req, res, next) {
@@ -74,7 +67,7 @@ app.get('/around', function (req, res) {
 
 app.get('/log', function (req, res) {
     time = new Date()
-    res.redirect('/log/' + time.getFullYear() + '/' + (time.getMonth()+1) + '/' + time.getDate())
+    res.redirect('/route/log/' + time.getFullYear() + '/' + (time.getMonth()+1) + '/' + time.getDate())
 })
 
 app.get('/log/:yy/:mm/:dd', function (req, res) {

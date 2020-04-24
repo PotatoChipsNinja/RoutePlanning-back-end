@@ -53,11 +53,18 @@ function server (params) {
     arrName = names.split(',')
     qName = names.split(',')
 
-    result = new Result()   // 保存返回结果
+    result = new Result()   // 创建结果对象
 
-    // 尝试请求坐标
-    arrLoc = []
-    city = getLoc(arrName, arrLoc)  // 若全部坐标获取成功则返回城市名，否则返回false
+    if ('location' in params) {
+        // 请求指定了坐标
+        arrLoc = params.location.split('|')
+        city = getLoc([arrName[0]], []) // 以出发点查询城市名
+    } else {
+        // 没有指定坐标，尝试查询坐标
+        arrLoc = []
+        city = getLoc(arrName, arrLoc)  // 若全部坐标获取成功则返回城市名，否则返回false
+    }
+
     if (city == false) {
         return result.toString()
     }
